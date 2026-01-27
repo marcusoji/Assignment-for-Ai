@@ -10,7 +10,7 @@
 // ===========================
 
 const CONFIG = {
-    API_URL: 'http://localhost:8000/api',
+    API_URL: 'https://ai-tictactoe-backend.onrender.com',
     SOUNDS_ENABLED: true,
     MUSIC_ENABLED: true,
     VOLUME: 0.5
