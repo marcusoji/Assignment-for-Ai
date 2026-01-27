@@ -81,18 +81,17 @@ class MinimaxEngine:
         self.nodes_evaluated = 0
         self.branches_pruned = 0
         self.max_depth_reached = 0
-   def get_best_move(self, board, player, difficulty='hard'):
+    def get_best_move(self, board, player, difficulty='hard'):
     # Force lowercase to prevent matching errors
-    diff = difficulty.lower() 
+      diff = difficulty.lower() 
     
-    if diff == 'easy':
+      if diff == 'easy':
         return self._get_random_move(board, player)
-    elif diff == 'medium':
+      elif diff == 'medium':
         return self._get_medium_move(board, player)
-    else:
+      else:
         # This ensures that even if the string is weird, it defaults to Hard
         return self._get_optimal_move(board, player)
-     
       
     def _get_random_move(
         self, 
