@@ -8,7 +8,7 @@ With Registration, Login, and Password Reset
 import hashlib
 import secrets
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict
 import os
 from supabase import create_client, Client
@@ -117,8 +117,8 @@ class AuthService:
             'email': email,
             'password_hash': password_hash,
             'password_salt': salt,
-            'created_at': datetime.utcnow().isoformat(),
-            'updated_at': datetime.utcnow().isoformat(),
+            'created_at': datetime.now(timezone.utc).isoformat(),
+            'updated_at': datetime.now(timezone.utc).isoformat(),
             'total_matches': 0,
             'matches_won': 0,
             'matches_lost': 0,
@@ -276,8 +276,15 @@ class AuthService:
         
         # Check if token is expired
         if user.get('reset_token_expires'):
+            # Convert the string from DB to an AWARE datetime object
             expires_at = datetime.fromisoformat(user['reset_token_expires'])
-            if datetime.utcnow() > expires_at:
+            
+            # If the DB string didn't have TZ info, force it to UTC
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+            # Compare against current AWARE UTC time
+            if datetime.now(timezone.utc) > expires_at:
                 raise ValueError("Reset token has expired")
         else:
             raise ValueError("Invalid reset token")
