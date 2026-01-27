@@ -49,11 +49,9 @@ class Difficulty(Enum):
     MEDIUM = 'medium'  # Limited depth minimax
     HARD = 'hard'      # Full minimax with pruning
 
-
 class GameResult(Enum):
-    """Game outcome"""
-    X_WIN = 10
-    O_WIN = -10
+    O_WIN = 10    # Change from -10 to 10
+    X_WIN = -10   # Change from 10 to -10
     DRAW = 0
     ONGOING = None
 
@@ -162,9 +160,9 @@ class MinimaxEngine:
         """
         import random
         
-        # 20% chance of making a random move
-        if random.random() < 0.2:
-            return self._get_random_move(board, player)
+       if random.random() < 0.2: # 20% chance to just play randomly
+        return self._get_random_move(board, player)
+    return self._run_search(board, player, max_depth=2) # Only look 2 moves ahead
         
         # Use minimax with limited depth
         best_move = None
@@ -337,73 +335,40 @@ class MinimaxEngine:
         
         # BASE CASE: Check if game is over
         result = self._evaluate_board(board)
-        if result != GameResult.ONGOING:
-            # Prefer faster wins and slower losses
-            if result == GameResult.O_WIN:
-                return result.value - depth
-            elif result == GameResult.X_WIN:
-                return result.value + depth
-            else:
-                return result.value
+        if result != GameResult.ONGOING or depth >= max_limit:
+    if result == GameResult.O_WIN:
+        return result.value - depth  # Subtract depth: Win in 2 moves = 8, Win in 4 moves = 6
+    if result == GameResult.X_WIN:
+        return result.value + depth  # Add depth: Loss in 2 moves = -8, Loss in 4 moves = -6
+    return 0
         
         # Get available moves
         available_moves = [i for i, cell in enumerate(board) if cell is None]
         
         # RECURSIVE CASE: Maximizing player (O - AI)
-        if is_maximizing:
+       if is_maximizing:
             max_eval = float('-inf')
-            
             for move in available_moves:
-                # Make hypothetical move
-                test_board = board.copy()
-                test_board[move] = 'O'
-                
-                # Recursively evaluate
-                eval_score = self._minimax_alpha_beta(
-                    test_board,
-                    depth + 1,
-                    False,
-                    alpha,
-                    beta
-                )
-                
+                board[move] = 'O'
+                eval_score = self._minimax_alpha_beta(board, depth + 1, False, alpha, beta, max_limit)
+                board[move] = None
                 max_eval = max(max_eval, eval_score)
-                alpha = max(alpha, eval_score)
-                
-                # ALPHA-BETA PRUNING
-                # If beta <= alpha, opponent won't allow this path
+                alpha = max(alpha, max_eval)
                 if beta <= alpha:
                     self.branches_pruned += 1
-                    break  # Prune remaining branches
-            
+                    break
             return max_eval
-        
-        # RECURSIVE CASE: Minimizing player (X - Human)
         else:
             min_eval = float('inf')
-            
             for move in available_moves:
-                # Make hypothetical move
-                test_board = board.copy()
-                test_board[move] = 'X'
-                
-                # Recursively evaluate
-                eval_score = self._minimax_alpha_beta(
-                    test_board,
-                    depth + 1,
-                    True,
-                    alpha,
-                    beta
-                )
-                
+                board[move] = 'X'
+                eval_score = self._minimax_alpha_beta(board, depth + 1, True, alpha, beta, max_limit)
+                board[move] = None
                 min_eval = min(min_eval, eval_score)
-                beta = min(beta, eval_score)
-                
-                # ALPHA-BETA PRUNING
+                beta = min(beta, min_eval)
                 if beta <= alpha:
                     self.branches_pruned += 1
-                    break  # Prune remaining branches
-            
+                    break
             return min_eval
     
     def _evaluate_board(self, board: List[Optional[str]]) -> GameResult:
@@ -417,19 +382,12 @@ class MinimaxEngine:
             GameResult.ONGOING: Game is still in progress
         """
         # Check for winner
-        for combo in self.winning_combinations:
-            if (board[combo[0]] == board[combo[1]] == board[combo[2]] and 
-                board[combo[0]] is not None):
-                if board[combo[0]] == 'X':
-                    return GameResult.X_WIN
-                else:
-                    return GameResult.O_WIN
+       for combo in self.winning_combinations:
+            if board[combo[0]] is not None and board[combo[0]] == board[combo[1]] == board[combo[2]]:
+                return GameResult.X_WIN if board[combo[0]] == 'X' else GameResult.O_WIN
         
-        # Check for draw (board full)
         if all(cell is not None for cell in board):
             return GameResult.DRAW
-        
-        # Game is ongoing
         return GameResult.ONGOING
     
     def _generate_explanation(
@@ -444,40 +402,14 @@ class MinimaxEngine:
         
         This makes the AI's thinking process transparent and educational.
         """
-        position_names = [
-            "top-left", "top-center", "top-right",
-            "middle-left", "center", "middle-right",
-            "bottom-left", "bottom-center", "bottom-right"
-        ]
+      pos_names = ["top-left", "top-center", "top-right", "middle-left", "center", "middle-right", "bottom-left", "bottom-center", "bottom-right"]
+        if move is None: return "Game Over."
         
-        explanation = f"Selected {position_names[move]} (position {move}) with evaluation score {score}. "
-        
-        # Explain score meaning
-        if score == 10:
-            explanation += "This move leads to a guaranteed win! "
-        elif score == -10:
-            explanation += "This move prevents opponent's guaranteed win. "
-        elif score > 0:
-            explanation += "This move creates winning opportunities. "
-        elif score < 0:
-            explanation += "This is a defensive move to block opponent. "
-        else:
-            explanation += "This move leads to a draw with optimal play. "
-        
-        # Add performance metrics
-        explanation += f"\n\nExplored {self.nodes_evaluated} possible future positions. "
-        explanation += f"Pruned {self.branches_pruned} unnecessary branches using alpha-beta optimization. "
-        explanation += f"Maximum search depth: {self.max_depth_reached} moves ahead."
-        
-        # Show alternative moves
-        sorted_moves = sorted(all_scores.items(), key=lambda x: x[1], reverse=(player == 'O'))
-        explanation += f"\n\nAlternative moves considered:"
-        for pos, s in sorted_moves[:3]:
-            explanation += f"\n- {position_names[pos]}: score {s}"
-        
-        return explanation
-
-
+        msg = f"AI chooses {pos_names[move]} with score {score}. "
+        if score >= 8: msg += "Guaranteed win found."
+        elif score <= -8: msg += "Forced to play defensively."
+        else: msg += "Playing for a draw/control."
+        return msg
 # ===========================
 # HELPER FUNCTIONS
 # ===========================
