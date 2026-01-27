@@ -81,42 +81,19 @@ class MinimaxEngine:
         self.nodes_evaluated = 0
         self.branches_pruned = 0
         self.max_depth_reached = 0
-        
-    def get_best_move(
-        self, 
-        board: List[Optional[str]], 
-        player: str, 
-        difficulty: str = 'hard'
-    ) -> Dict:
-        """
-        Get the best move for the current player based on difficulty.
-        
-        Args:
-            board: Current board state (9-element list)
-            player: Current player ('X' or 'O')
-            difficulty: AI difficulty level
-            
-        Returns:
-            Dictionary containing:
-            - move: Best move index (0-8)
-            - score: Evaluation score
-            - nodes_evaluated: Number of nodes explored
-            - branches_pruned: Number of branches pruned
-            - explanation: Human-readable explanation
-        """
-        # Reset metrics
-        self.nodes_evaluated = 0
-        self.branches_pruned = 0
-        self.max_depth_reached = 0
-        
-        # Get move based on difficulty
-        if difficulty == 'easy':
-            return self._get_random_move(board, player)
-        elif difficulty == 'medium':
-            return self._get_medium_move(board, player)
-        else:  # hard
-            return self._get_optimal_move(board, player)
+   def get_best_move(self, board, player, difficulty='hard'):
+    # Force lowercase to prevent matching errors
+    diff = difficulty.lower() 
     
+    if diff == 'easy':
+        return self._get_random_move(board, player)
+    elif diff == 'medium':
+        return self._get_medium_move(board, player)
+    else:
+        # This ensures that even if the string is weird, it defaults to Hard
+        return self._get_optimal_move(board, player)
+     
+      
     def _get_random_move(
         self, 
         board: List[Optional[str]], 
@@ -129,8 +106,8 @@ class MinimaxEngine:
         """
         import random
         
-        # Get all available moves
-        available_moves = [i for i, cell in enumerate(board) if cell is None]
+     # Instead of only checking for None, check for empty strings too
+available_moves = [i for i, cell in enumerate(board) if cell is None or cell == ""]
         
         if not available_moves:
             return None
