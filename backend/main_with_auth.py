@@ -401,29 +401,25 @@ async def get_match_rounds(match_id: str):
 @app.post("/api/ai/move", response_model=AIMoveResponse)
 async def get_ai_move(move_request: AIMoveRequest):
     """
-    Get AI's best move using Minimax algorithm.
-    
-    ALGORITHM BREAKDOWN:
-    1. Receives current board state
-    2. Applies Minimax with selected difficulty:
-       - EASY: Random moves
-       - MEDIUM: Limited depth search
-       - HARD: Full Minimax + Alpha-Beta pruning
-    3. Returns:
-       - Best move position (0-8)
-       - Evaluation score
-       - Performance metrics
-       - Human-readable explanation
+    Get AI's best move.
+    FIXED: Added board sanitization to ensure empty strings are treated as None.
     """
     try:
-        # Get AI's move
+        # 1. SANITIZE BOARD: Ensure ["X", "", ""] becomes ["X", None, None]
+        # This prevents the AI from thinking the board is full.
+        clean_board = [None if cell == "" or cell is None else cell for cell in move_request.board]
+        
+        # 2. GET DIFFICULTY: Ensure it's a string and lowercase
+        diff_str = move_request.difficulty.value.lower() if hasattr(move_request.difficulty, 'value') else str(move_request.difficulty).lower()
+
+        # 3. CALL ENGINE
         result = ai_engine.get_best_move(
-            board=move_request.board,
+            board=clean_board,
             player=move_request.player,
-            difficulty=move_request.difficulty.value
+            difficulty=diff_str
         )
         
-        if result is None:
+        if result is None or result.get('move') is None:
             raise HTTPException(status_code=400, detail="No valid moves available")
         
         return AIMoveResponse(
@@ -435,19 +431,17 @@ async def get_ai_move(move_request: AIMoveRequest):
         )
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
+        print(f"AI Error: {e}") # Log this to your console
+        raise HTTPException(status_code=500, detail=f"AI Engine Error: {str(e)}")
 
 @app.post("/api/ai/evaluate")
 async def evaluate_position(move_request: AIMoveRequest):
-    """
-    Evaluate current board position.
-    
-    Returns detailed analysis without making a move.
-    """
+    """Detailed position analysis."""
     try:
+        clean_board = [None if cell == "" or cell is None else cell for cell in move_request.board]
+        
         result = ai_engine.get_best_move(
-            board=move_request.board,
+            board=clean_board,
             player=move_request.player,
             difficulty='hard'
         )
@@ -463,7 +457,6 @@ async def evaluate_position(move_request: AIMoveRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @app.get("/api/ai/algorithm")
 async def get_algorithm_explanation():
