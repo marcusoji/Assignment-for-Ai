@@ -1,16 +1,114 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Tic-Tac-Toe | Minimax Algorithm</title>
-    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="css/index.css">
     
     <!-- Distinctive Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Additional styles for auth forms */
+        .auth-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            justify-content: center;
+        }
+        
+        .auth-tab {
+            padding: 0.75rem 2rem;
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--text-light);
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: var(--transition-normal);
+        }
+        
+        .auth-tab.active {
+            background: var(--primary-color);
+            color: var(--bg-dark);
+        }
+        
+        .auth-tab:hover {
+            transform: translateY(-2px);
+        }
+        
+        .auth-form-container {
+            display: none;
+        }
+        
+        .auth-form-container.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: var(--spacing-md);
+            font-size: 1.1rem;
+            background: var(--bg-darker);
+            border: 2px solid var(--primary-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-light);
+            font-family: 'Rajdhani', sans-serif;
+            transition: var(--transition-normal);
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: var(--shadow-glow);
+        }
+        
+        .forgot-password-link {
+            display: block;
+            text-align: center;
+            margin-top: 1rem;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        
+        .forgot-password-link:hover {
+            color: var(--accent-color);
+            text-decoration: underline;
+        }
+        
+        .success-message {
+            color: var(--success);
+            font-size: 0.9rem;
+            margin-top: var(--spacing-sm);
+            padding: var(--spacing-sm);
+            background: rgba(0, 255, 136, 0.1);
+            border-radius: var(--radius-sm);
+            opacity: 0;
+            transition: var(--transition-normal);
+        }
+        
+        .success-message.visible {
+            opacity: 1;
+        }
+    </style>
 </head>
 <body>
     
@@ -34,7 +132,7 @@
     <!-- Main Container -->
     <div class="app-container">
         
-        <!-- Login Screen -->
+        <!-- Login/Register Screen -->
         <div id="screen-login" class="screen active">
             <div class="login-content">
                 <div class="brand">
@@ -42,11 +140,63 @@
                     <div class="brand-subtitle">Powered by Minimax AI</div>
                 </div>
                 
-                <div class="login-form">
-                    <h2>Enter Your Username</h2>
-                    <input type="text" id="input-username" placeholder="Username" maxlength="50" />
-                    <button id="btn-login" class="btn btn-primary">Start Playing</button>
+                <!-- Login/Register Form -->
+                <div id="login-form-container" class="login-form">
+                    <div class="auth-tabs">
+                        <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Login</button>
+                        <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Register</button>
+                    </div>
+                    
+                    <!-- Login Form -->
+                    <div id="form-login" class="auth-form-container active">
+                        <h2>Welcome Back</h2>
+                        <div class="form-group">
+                            <label for="input-username">Username or Email</label>
+                            <input type="text" id="input-username" placeholder="Enter username or email" maxlength="50" />
+                        </div>
+                        <div class="form-group">
+                            <label for="input-password">Password</label>
+                            <input type="password" id="input-password" placeholder="Enter password" />
+                        </div>
+                        <button id="btn-login" class="btn btn-primary" style="width: 100%;">Login</button>
+                        <a class="forgot-password-link" id="btn-forgot-password">Forgot Password?</a>
+                    </div>
+                    
+                    <!-- Register Form -->
+                    <div id="form-register" class="auth-form-container">
+                        <h2>Create Account</h2>
+                        <div class="form-group">
+                            <label for="input-reg-username">Username</label>
+                            <input type="text" id="input-reg-username" placeholder="Choose a username" minlength="3" maxlength="50" />
+                        </div>
+                        <div class="form-group">
+                            <label for="input-email">Email</label>
+                            <input type="email" id="input-email" placeholder="your.email@example.com" />
+                        </div>
+                        <div class="form-group">
+                            <label for="input-reg-password">Password</label>
+                            <input type="password" id="input-reg-password" placeholder="At least 6 characters" minlength="6" />
+                        </div>
+                        <button id="btn-register" class="btn btn-primary" style="width: 100%;">Create Account</button>
+                    </div>
+                    
                     <div id="login-error" class="error-message"></div>
+                </div>
+                
+                <!-- Forgot Password Form -->
+                <div id="forgot-password-container" class="login-form" style="display: none;">
+                    <h2>Reset Password</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+                        Enter your email address and we'll send you a link to reset your password.
+                    </p>
+                    <div class="form-group">
+                        <label for="input-reset-email">Email Address</label>
+                        <input type="email" id="input-reset-email" placeholder="your.email@example.com" />
+                    </div>
+                    <button id="btn-submit-reset-email" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">Send Reset Link</button>
+                    <button id="btn-back-to-login" class="btn btn-secondary" style="width: 100%;">Back to Login</button>
+                    <div id="reset-error" class="error-message"></div>
+                    <div id="reset-success" class="success-message"></div>
                 </div>
                 
                 <div class="ai-info">
@@ -194,7 +344,7 @@
             </div>
             
             <!-- AI Decision Explanation Panel -->
-            <div class="ai-explanation" id="ai-explanation">
+            <div class="ai-explanation" id="ai-explanation" style="display: none;">
                 <h3>🧠 AI Decision Analysis</h3>
                 <div class="explanation-content">
                     <div class="explanation-item">
@@ -325,9 +475,51 @@
         </div>
 
     </div>
+ <script>
+        // Tab switching function
+        function switchAuthTab(tab) {
+            // Update tabs
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            
+            // Update forms
+            document.querySelectorAll('.auth-form-container').forEach(f => f.classList.remove('active'));
+            document.getElementById('form-' + tab).classList.add('active');
+            
+            // Clear errors
+            document.getElementById('login-error').textContent = '';
+            document.getElementById('login-error').classList.remove('visible');
+            
+            // Update button handlers
+            if (tab === 'register') {
+                // Copy values for register form
+                const username = document.getElementById('input-username').value;
+                document.getElementById('input-reg-username').value = username;
+            } else {
+                // Copy values back to login form
+                const username = document.getElementById('input-reg-username').value;
+                document.getElementById('input-username').value = username;
+            }
+        }
+        
+        // Update register button to use correct inputs
+        document.getElementById('btn-register').onclick = function() {
+            handleRegister();
+        };
+        
+        // Helper to get values from active form
+        function handleRegister() {
+            const username = document.getElementById('input-reg-username').value.trim();
+            const email = document.getElementById('input-email').value.trim();
+            const password = document.getElementById('input-reg-password').value;
+            
+            // Call your register function with these values
+            // (This is handled in game_with_auth.js)
+        }
+    </script>
 
     <!-- Scripts -->
-     <script src="mock.js"></script>
+    <script src="js/game_with_auth.js"></script>
 
 </body>
 </html>

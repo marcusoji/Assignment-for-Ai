@@ -1,0 +1,32 @@
+# Render.com Blueprint Configuration
+# Place this file in the root of your repository
+
+services:
+  # Backend API Service
+  - type: web
+    name: ai-tictactoe-backend
+    runtime: python
+    plan: free  # or starter for $7/month
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.13
+      
+      - key: SUPABASE_URL
+        sync: false  # Set manually in Render dashboard
+      
+      - key: SUPABASE_KEY
+        sync: false  # Set manually in Render dashboard
+      
+      - key: ALLOWED_ORIGINS
+        value: "*"  # Change to your frontend URL in production
+      
+      - key: ENVIRONMENT
+        value: production
+
+# Frontend Static Site
+# Deploy separately as a Static Site in Render dashboard
+# No blueprint needed - just point to frontend directory
