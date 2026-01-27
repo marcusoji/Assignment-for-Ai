@@ -193,9 +193,10 @@ async function handleLogin() {
 // ===========================
 
 async function handleRegister() {
-    const username = document.getElementById('input-username').value.trim();
+    // Get values from CORRECT input IDs
+    const username = document.getElementById('input-reg-username').value.trim();
     const email = document.getElementById('input-email').value.trim();
-    const password = document.getElementById('input-password').value;
+    const password = document.getElementById('input-reg-password').value;
     const errorEl = document.getElementById('login-error');
 
     // Clear previous errors
@@ -206,6 +207,7 @@ async function handleRegister() {
     if (!username || !email || !password) {
         errorEl.textContent = "Please fill in all fields.";
         errorEl.classList.add('visible');
+        console.log('Validation failed: empty fields');
         return;
     }
 
@@ -230,9 +232,14 @@ async function handleRegister() {
     }
 
     try {
+        console.log('Attempting registration:', { username, email }); // Debug
+        
         const response = await fetch(`${CONFIG.API_URL}/auth/register`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
             body: JSON.stringify({
                 username: username,
                 email: email,
@@ -241,6 +248,7 @@ async function handleRegister() {
         });
 
         const data = await response.json();
+        console.log('Server response:', response.status, data); // Debug
         
         if (response.ok) {
             GAME_STATE.currentUser = data.user;
@@ -248,11 +256,14 @@ async function handleRegister() {
             playSound('audio-click');
             showScreen('screen-mode-select');
         } else {
-            errorEl.textContent = data.detail || "Registration failed";
+            // Show specific error message from backend
+            const errorMessage = data.detail || 'Registration failed';
+            errorEl.textContent = errorMessage;
             errorEl.classList.add('visible');
+            console.error('Backend error:', data);
         }
     } catch (error) {
-        console.error('Register error:', error);
+        console.error('Network error:', error);
         errorEl.textContent = "Connection error. Please try again.";
         errorEl.classList.add('visible');
     }
