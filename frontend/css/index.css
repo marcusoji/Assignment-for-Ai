@@ -838,3 +838,114 @@ td {
         font-size: 2.5rem;
     }
 }
+/* === ENHANCED MOBILE & TOUCH OPTIMIZATIONS === */
+
+@media (max-width: 768px) {
+    /* 1. Viewport & Layout Adjustments */
+    .app-container {
+        padding: var(--spacing-sm);
+    }
+
+    .brand-title {
+        font-size: 2.2rem;
+        margin-top: 0; /* Save space on top */
+    }
+
+    /* 2. Game Board Scaling */
+    .game-board-container {
+        max-width: 95vw;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .cell {
+        font-size: 2.8rem;
+        border-width: 1.5px;
+    }
+
+    /* 3. Match History - Table to Card Conversion */
+    /* This section prevents the stats page from scrolling horizontally */
+    #history-tbody tr {
+        display: block;
+        margin-bottom: var(--spacing-md);
+        background: var(--bg-darker);
+        border: 1px solid var(--primary-color);
+        border-radius: var(--radius-sm);
+        padding: var(--spacing-xs);
+    }
+
+    #history-tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        text-align: right;
+    }
+
+    #history-tbody td:last-child {
+        border-bottom: none;
+    }
+
+    /* Add Labels using CSS Content (since JS doesn't have data-labels yet) */
+    #history-tbody td:nth-of-type(1)::before { content: "Date"; color: var(--primary-color); font-weight: bold; }
+    #history-tbody td:nth-of-type(2)::before { content: "Opponent"; color: var(--primary-color); font-weight: bold; }
+    #history-tbody td:nth-of-type(3)::before { content: "Mode"; color: var(--primary-color); font-weight: bold; }
+    #history-tbody td:nth-of-type(4)::before { content: "Difficulty"; color: var(--primary-color); font-weight: bold; }
+    #history-tbody td:nth-of-type(5)::before { content: "Result"; color: var(--primary-color); font-weight: bold; }
+    #history-tbody td:nth-of-type(6)::before { content: "Score"; color: var(--primary-color); font-weight: bold; }
+
+    .history-table thead {
+        display: none; /* Hide original headers */
+    }
+
+    /* 4. Navigation & Buttons */
+    .game-header {
+        flex-direction: column;
+        gap: var(--spacing-xs);
+    }
+
+    .btn {
+        width: 100%; /* Easier to hit with thumbs */
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .match-buttons {
+        flex-direction: column;
+    }
+}
+
+/* 5. Fix Sticky Hover on Touchscreens */
+@media (hover: none) {
+    .cell:hover:not(.taken),
+    .mode-card:hover,
+    .difficulty-card:hover {
+        transform: none !important;
+        box-shadow: var(--shadow-sm) !important;
+    }
+
+    /* Active state gives feedback instead of hover */
+    .cell:active {
+        background: rgba(0, 217, 255, 0.2);
+    }
+    
+    .btn:active {
+        opacity: 0.8;
+        transform: scale(0.98);
+    }
+}
+
+/* 6. Audio Controls Mobile Positioning */
+@media (max-width: 480px) {
+    .audio-controls {
+        width: auto;
+        padding: 5px;
+        bottom: 10px;
+        right: 10px;
+        transform: scale(0.85);
+        transform-origin: bottom right;
+    }
+    
+    #volume-slider {
+        width: 60px; /* Shorter slider for small phones */
+    }
+}
