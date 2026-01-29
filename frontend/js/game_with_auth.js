@@ -149,7 +149,7 @@ function checkExistingSession() {
 // ===========================
 async function handleLogin() {
     const loginBtn = document.getElementById('btn-login');
-    const usernameOrEmail = document.getElementById('input-username').value.trim();
+    const usernameOrEmail = document.getElementById('input-username').value.trim().toLowerCase();
     const password = document.getElementById('input-password').value;
     const errorEl = document.getElementById('login-error');
 
