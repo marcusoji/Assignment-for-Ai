@@ -144,7 +144,11 @@ function checkExistingSession() {
 // AUTHENTICATION - LOGIN
 // ===========================
 
+// ===========================
+// AUTHENTICATION - LOGIN (Updated with Loading)
+// ===========================
 async function handleLogin() {
+    const loginBtn = document.getElementById('btn-login');
     const usernameOrEmail = document.getElementById('input-username').value.trim();
     const password = document.getElementById('input-password').value;
     const errorEl = document.getElementById('login-error');
@@ -159,6 +163,12 @@ async function handleLogin() {
         errorEl.classList.add('visible');
         return;
     }
+
+    // Set Loading State
+    const originalText = loginBtn.innerHTML;
+    loginBtn.disabled = true;
+    loginBtn.classList.add('processing');
+    loginBtn.innerHTML = `<div class="btn-loading-content"><div class="spinner"></div><span>Signing In...</span></div>`;
 
     try {
         const response = await fetch(`${CONFIG.API_URL}/auth/login`, {
@@ -180,20 +190,27 @@ async function handleLogin() {
         } else {
             errorEl.textContent = data.detail || "Login failed";
             errorEl.classList.add('visible');
+            // Reset button if failed
+            loginBtn.disabled = false;
+            loginBtn.classList.remove('processing');
+            loginBtn.innerHTML = originalText;
         }
     } catch (error) {
         console.error('Login error:', error);
         errorEl.textContent = "Connection error. Please try again.";
         errorEl.classList.add('visible');
+        // Reset button if error
+        loginBtn.disabled = false;
+        loginBtn.classList.remove('processing');
+        loginBtn.innerHTML = originalText;
     }
 }
 
 // ===========================
-// AUTHENTICATION - REGISTER
+// AUTHENTICATION - REGISTER (Updated with Loading)
 // ===========================
-
 async function handleRegister() {
-    // Get values from CORRECT input IDs
+    const regBtn = document.getElementById('btn-register');
     const username = document.getElementById('input-reg-username').value.trim();
     const email = document.getElementById('input-email').value.trim();
     const password = document.getElementById('input-reg-password').value;
@@ -203,37 +220,20 @@ async function handleRegister() {
     errorEl.textContent = '';
     errorEl.classList.remove('visible');
 
-    // Validate
+    // Validation checks
     if (!username || !email || !password) {
         errorEl.textContent = "Please fill in all fields.";
         errorEl.classList.add('visible');
-        console.log('Validation failed: empty fields');
         return;
     }
-
-    if (username.length < 3) {
-        errorEl.textContent = "Username must be at least 3 characters.";
-        errorEl.classList.add('visible');
-        return;
-    }
-
-    if (password.length < 6) {
-        errorEl.textContent = "Password must be at least 6 characters.";
-        errorEl.classList.add('visible');
-        return;
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        errorEl.textContent = "Please enter a valid email address.";
-        errorEl.classList.add('visible');
-        return;
-    }
+    
+    // Set Loading State
+    const originalText = regBtn.innerHTML;
+    regBtn.disabled = true;
+    regBtn.classList.add('processing');
+    regBtn.innerHTML = `<div class="btn-loading-content"><div class="spinner"></div><span>Creating Account...</span></div>`;
 
     try {
-        console.log('Attempting registration:', { username, email }); // Debug
-        
         const response = await fetch(`${CONFIG.API_URL}/auth/register`, {
             method: 'POST',
             headers: { 
@@ -248,7 +248,6 @@ async function handleRegister() {
         });
 
         const data = await response.json();
-        console.log('Server response:', response.status, data); // Debug
         
         if (response.ok) {
             GAME_STATE.currentUser = data.user;
@@ -256,16 +255,19 @@ async function handleRegister() {
             playSound('audio-click');
             showScreen('screen-mode-select');
         } else {
-            // Show specific error message from backend
-            const errorMessage = data.detail || 'Registration failed';
-            errorEl.textContent = errorMessage;
+            errorEl.textContent = data.detail || 'Registration failed';
             errorEl.classList.add('visible');
-            console.error('Backend error:', data);
+            regBtn.disabled = false;
+            regBtn.classList.remove('processing');
+            regBtn.innerHTML = originalText;
         }
     } catch (error) {
         console.error('Network error:', error);
         errorEl.textContent = "Connection error. Please try again.";
         errorEl.classList.add('visible');
+        regBtn.disabled = false;
+        regBtn.classList.remove('processing');
+        regBtn.innerHTML = originalText;
     }
 }
 
