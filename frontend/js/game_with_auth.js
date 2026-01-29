@@ -87,6 +87,14 @@ function setupEventListeners() {
     document.getElementById('btn-next-round').addEventListener('click', startNextRound);
     document.getElementById('btn-play-again').addEventListener('click', handlePlayAgain);
     document.getElementById('btn-main-menu').addEventListener('click', handleMainMenu);
+     // One-time listener to bypass browser autoplay restrictions
+document.addEventListener('click', () => {
+    const music = document.getElementById('audio-music');
+    if (music.paused && CONFIG.MUSIC_ENABLED) {
+        music.volume = CONFIG.VOLUME;
+        music.play();
+    }
+}, { once: true }); // 'once: true' ensures this only runs on the first click
 }
 
 // ===========================
