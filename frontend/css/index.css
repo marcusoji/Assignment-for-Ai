@@ -974,3 +974,85 @@ td {
     cursor: wait;
     opacity: 0.8;
 }
+/* ========================================
+   STATISTICS SCREEN - COMPLETE CSS
+   Add this to your existing styles.css
+   ======================================== */
+
+/* Your existing stats styles remain unchanged */
+
+/* NEW: Charts Section Addon Styles */
+.charts-section-addon {
+    margin-top: 40px;
+    padding: 20px 0;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.chart-box {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border: 1px solid #e0e0e0;
+}
+
+.chart-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.chart-box h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #2c3e50;
+    font-size: 16px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.chart-full-width {
+    grid-column: 1 / -1;
+}
+
+.chart-box canvas {
+    max-height: 280px;
+    width: 100% !important;
+    height: auto !important;
+}
+
+/* Responsive Design for Charts */
+@media (max-width: 768px) {
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .chart-full-width {
+        grid-column: 1;
+    }
+    
+    .chart-box {
+        padding: 15px;
+    }
+    
+    .chart-box h4 {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .charts-section-addon h3 {
+        font-size: 18px;
+    }
+    
+    .chart-box canvas {
+        max-height: 220px;
+    }
+}
+
