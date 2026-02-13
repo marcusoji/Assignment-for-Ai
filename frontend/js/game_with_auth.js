@@ -1,7 +1,8 @@
 /**
  * ============================================
  * AI TIC-TAC-TOE GAME - WITH AUTHENTICATION
- * Complete Frontend Logic with Login/Register/Password Reset
+ * Complete  Logic with Login/Register/Password Reset
+ * 
  * ============================================
  */
 
@@ -29,6 +30,13 @@ const GAME_STATE = {
     gameActive: false,
     isAITurn: false
 };
+
+// ===========================
+// CHART VARIABLES (NEW)
+// ===========================
+let resultsChart = null;
+let difficultyChart = null;
+let trendChart = null;
 
 // ===========================
 // INITIALIZATION
@@ -152,9 +160,6 @@ function checkExistingSession() {
 // AUTHENTICATION - LOGIN
 // ===========================
 
-// ===========================
-// AUTHENTICATION - LOGIN (Updated with Loading)
-// ===========================
 async function handleLogin() {
     const loginBtn = document.getElementById('btn-login');
     const usernameOrEmail = document.getElementById('input-username').value.trim().toLowerCase();
@@ -215,7 +220,7 @@ async function handleLogin() {
 }
 
 // ===========================
-// AUTHENTICATION - REGISTER (Updated with Loading)
+// AUTHENTICATION - REGISTER
 // ===========================
 async function handleRegister() {
     const regBtn = document.getElementById('btn-register');
@@ -234,7 +239,26 @@ async function handleRegister() {
         errorEl.classList.add('visible');
         return;
     }
-    
+
+    if (username.length < 3) {
+        errorEl.textContent = "Username must be at least 3 characters.";
+        errorEl.classList.add('visible');
+        return;
+    }
+
+    if (password.length < 6) {
+        errorEl.textContent = "Password must be at least 6 characters.";
+        errorEl.classList.add('visible');
+        return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        errorEl.textContent = "Please enter a valid email address.";
+        errorEl.classList.add('visible');
+        return;
+    }
+
     // Set Loading State
     const originalText = regBtn.innerHTML;
     regBtn.disabled = true;
@@ -263,8 +287,10 @@ async function handleRegister() {
             playSound('audio-click');
             showScreen('screen-mode-select');
         } else {
-            errorEl.textContent = data.detail || 'Registration failed';
+            const errorMessage = data.detail || 'Registration failed';
+            errorEl.textContent = errorMessage;
             errorEl.classList.add('visible');
+            // Reset button
             regBtn.disabled = false;
             regBtn.classList.remove('processing');
             regBtn.innerHTML = originalText;
@@ -273,6 +299,7 @@ async function handleRegister() {
         console.error('Network error:', error);
         errorEl.textContent = "Connection error. Please try again.";
         errorEl.classList.add('visible');
+        // Reset button
         regBtn.disabled = false;
         regBtn.classList.remove('processing');
         regBtn.innerHTML = originalText;
@@ -302,13 +329,11 @@ async function handleRequestReset() {
     const errorEl = document.getElementById('reset-error');
     const successEl = document.getElementById('reset-success');
 
-    // Clear previous messages
     errorEl.textContent = '';
     errorEl.classList.remove('visible');
     successEl.textContent = '';
     successEl.classList.remove('visible');
 
-    // Validate
     if (!email) {
         errorEl.textContent = "Please enter your email address.";
         errorEl.classList.add('visible');
@@ -331,16 +356,13 @@ async function handleRequestReset() {
 
         const data = await response.json();
         
-        // Always show success for security (don't reveal if email exists)
         successEl.textContent = "If the email exists, a reset link has been sent. Check your inbox.";
         successEl.classList.add('visible');
         
-        // Show reset token in development (REMOVE IN PRODUCTION!)
         if (data.data && data.data.reset_token) {
             console.log('Reset Token (DEV ONLY):', data.data.reset_token);
             console.log('Reset Link (DEV ONLY):', data.data.reset_link);
             
-            // For development, offer to use token directly
             setTimeout(() => {
                 if (confirm('Development Mode: Use reset token directly?')) {
                     showResetPasswordForm(data.data.reset_token);
@@ -356,7 +378,6 @@ async function handleRequestReset() {
 }
 
 function showResetPasswordForm(token) {
-    // In production, this would be a separate page: /reset-password?token=xxx
     const newPassword = prompt('Enter new password (6+ characters):');
     if (newPassword && newPassword.length >= 6) {
         handleResetPassword(token, newPassword);
@@ -462,25 +483,20 @@ async function startNewMatch() {
 }
 
 async function startNewRound() {
-    // Reset board state
     GAME_STATE.board = Array(9).fill(null);
     GAME_STATE.currentPlayer = 'X';
     GAME_STATE.gameActive = true;
     GAME_STATE.isAITurn = false;
 
-    // Clear board visually
     document.querySelectorAll('.cell').forEach(cell => {
         cell.textContent = '';
         cell.classList.remove('x', 'o', 'taken', 'winning');
     });
 
-    // Hide AI explanation
     document.getElementById('ai-explanation').style.display = 'none';
 
-    // Update display
     updateTurnIndicator();
 
-    // If AI vs AI, start automatic play
     if (GAME_STATE.currentMode === 'ai_vs_ai') {
         setTimeout(() => playAIvsAI(), 1000);
     }
@@ -494,14 +510,12 @@ function updateGameDisplay() {
     const player2Score = document.getElementById('player2-score');
     const currentRound = document.getElementById('current-round');
 
-    // Set mode display
     let modeText = GAME_STATE.currentMode.replace(/_/g, ' ').toUpperCase();
     if (GAME_STATE.currentDifficulty) {
         modeText += ` (${GAME_STATE.currentDifficulty.toUpperCase()})`;
     }
     modeDisplay.textContent = modeText;
 
-    // Set player names
     if (GAME_STATE.currentMode === 'human_vs_ai') {
         player1Name.textContent = GAME_STATE.currentUser.username;
         player2Name.textContent = `AI (${GAME_STATE.currentDifficulty})`;
@@ -513,7 +527,6 @@ function updateGameDisplay() {
         player2Name.textContent = 'AI 2';
     }
 
-    // Update scores
     player1Score.textContent = GAME_STATE.player1Score;
     player2Score.textContent = GAME_STATE.player2Score;
     currentRound.textContent = GAME_STATE.currentRound;
@@ -540,37 +553,30 @@ function updateTurnIndicator() {
 // ===========================
 
 async function handleCellClick(index) {
-    // Validate move
     if (!GAME_STATE.gameActive) return;
     if (GAME_STATE.board[index] !== null) return;
     if (GAME_STATE.isAITurn) return;
 
-    // Make move
     await makeMove(index, GAME_STATE.currentPlayer);
 }
 
 async function makeMove(index, player) {
-    // Update board state
     GAME_STATE.board[index] = player;
 
-    // Update UI
     const cell = document.querySelector(`.cell[data-index="${index}"]`);
     cell.textContent = player;
     cell.classList.add(player.toLowerCase(), 'taken');
 
     playSound('audio-click');
 
-    // Check for game end
     const result = checkGameEnd();
     
     if (result) {
         await handleRoundEnd(result);
     } else {
-        // Switch player
         GAME_STATE.currentPlayer = player === 'X' ? 'O' : 'X';
         updateTurnIndicator();
 
-        // If AI's turn in human vs AI mode
         if (GAME_STATE.currentMode === 'human_vs_ai' && GAME_STATE.currentPlayer === 'O') {
             GAME_STATE.isAITurn = true;
             await makeAIMove();
@@ -583,7 +589,6 @@ async function makeMove(index, player) {
 // ===========================
 
 async function makeAIMove() {
-    // Show thinking animation
     const thinkingEl = document.getElementById('ai-thinking');
     thinkingEl.classList.add('visible');
 
@@ -600,14 +605,11 @@ async function makeAIMove() {
 
         const data = await response.json();
 
-        // Hide thinking animation
         thinkingEl.classList.remove('visible');
 
         if (response.ok) {
-            // Display AI explanation
             displayAIExplanation(data);
 
-            // Make the move after a brief delay
             setTimeout(() => {
                 GAME_STATE.isAITurn = false;
                 makeMove(data.move, 'O');
@@ -651,7 +653,7 @@ async function playAIvsAI() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 board: GAME_STATE.board,
-                difficulty: 'hard', // Both AIs use hard difficulty
+                difficulty: 'hard',
                 player: GAME_STATE.currentPlayer
             })
         });
@@ -664,7 +666,6 @@ async function playAIvsAI() {
             
             await makeMove(data.move, GAME_STATE.currentPlayer);
 
-            // Continue AI vs AI if game is still active
             if (GAME_STATE.gameActive) {
                 setTimeout(() => playAIvsAI(), 1500);
             }
@@ -680,14 +681,12 @@ async function playAIvsAI() {
 // ===========================
 
 function checkGameEnd() {
-    // Check for winner
     const winner = checkWinner();
     if (winner) {
         highlightWinningCells(winner.line);
         return { type: 'win', winner: winner.player };
     }
 
-    // Check for draw
     if (GAME_STATE.board.every(cell => cell !== null)) {
         return { type: 'draw' };
     }
@@ -697,9 +696,9 @@ function checkGameEnd() {
 
 function checkWinner() {
     const winPatterns = [
-        [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-        [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
-        [0, 4, 8], [2, 4, 6]             // Diagonals
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],
+        [0, 4, 8], [2, 4, 6]
     ];
 
     for (const pattern of winPatterns) {
@@ -727,7 +726,6 @@ function highlightWinningCells(line) {
 async function handleRoundEnd(result) {
     GAME_STATE.gameActive = false;
 
-    // Update scores
     if (result.type === 'win') {
         if (result.winner === 'X') {
             GAME_STATE.player1Score++;
@@ -736,7 +734,6 @@ async function handleRoundEnd(result) {
         }
     }
 
-    // Play appropriate sound
     if (result.type === 'win') {
         if (GAME_STATE.currentMode === 'human_vs_ai') {
             playSound(result.winner === 'X' ? 'audio-win' : 'audio-lose');
@@ -747,10 +744,8 @@ async function handleRoundEnd(result) {
         playSound('audio-draw');
     }
 
-    // Save round to backend
     await saveRound(result);
 
-    // Show result modal after delay
     setTimeout(() => {
         showRoundResultModal(result);
     }, 1500);
@@ -780,7 +775,6 @@ function showRoundResultModal(result) {
     const title = document.getElementById('round-result-title');
     const message = document.getElementById('round-result-message');
 
-    // Set content
     if (result.type === 'win') {
         icon.textContent = result.winner === 'X' ? '🎉' : '😔';
         title.textContent = `Round ${GAME_STATE.currentRound} Complete`;
@@ -796,23 +790,18 @@ function showRoundResultModal(result) {
         message.textContent = "It's a draw!";
     }
 
-    // Update score display
     document.getElementById('modal-player1-name').textContent = document.getElementById('player1-name').textContent;
     document.getElementById('modal-player2-name').textContent = document.getElementById('player2-name').textContent;
     document.getElementById('modal-player1-score').textContent = GAME_STATE.player1Score;
     document.getElementById('modal-player2-score').textContent = GAME_STATE.player2Score;
 
-    // Check if match is over
     if (GAME_STATE.player1Score === 2 || GAME_STATE.player2Score === 2) {
-        // Match over - show match result instead
         modal.classList.remove('active');
         setTimeout(() => showMatchResultModal(), 500);
     } else if (GAME_STATE.currentRound === 3) {
-        // All 3 rounds played, determine winner or draw
         modal.classList.remove('active');
         setTimeout(() => showMatchResultModal(), 500);
     } else {
-        // Show next round button
         modal.classList.add('active');
     }
 }
@@ -834,7 +823,6 @@ async function showMatchResultModal() {
     const title = document.getElementById('match-result-title');
     const message = document.getElementById('match-result-message');
 
-    // Determine match result
     let matchResult;
     if (GAME_STATE.player1Score > GAME_STATE.player2Score) {
         matchResult = 'player1_win';
@@ -862,13 +850,11 @@ async function showMatchResultModal() {
 
     title.textContent = 'Match Complete';
 
-    // Update final scores
     document.getElementById('final-player1-name').textContent = document.getElementById('player1-name').textContent;
     document.getElementById('final-player2-name').textContent = document.getElementById('player2-name').textContent;
     document.getElementById('final-player1-score').textContent = GAME_STATE.player1Score;
     document.getElementById('final-player2-score').textContent = GAME_STATE.player2Score;
 
-    // Save match result
     await saveMatchResult(matchResult);
 
     modal.classList.add('active');
@@ -911,7 +897,7 @@ function handleExitGame() {
 }
 
 // ===========================
-// STATISTICS
+// STATISTICS (UPDATED WITH CHARTS!)
 // ===========================
 
 async function showStatistics() {
@@ -926,6 +912,11 @@ async function loadStatistics() {
 
         if (response.ok) {
             displayStatistics(data);
+            
+            // NEW: Create/update charts
+            createResultsChart(data);
+            createDifficultyChart(data);
+            createTrendChart(data);
         }
     } catch (error) {
         console.error('Load statistics error:', error);
@@ -937,7 +928,6 @@ function displayStatistics(stats) {
     document.getElementById('stat-matches-won').textContent = stats.matches_won;
     document.getElementById('stat-win-rate').textContent = `${stats.win_rate}%`;
 
-    // Display match history
     const tbody = document.getElementById('history-tbody');
     tbody.innerHTML = '';
 
@@ -952,4 +942,226 @@ function displayStatistics(stats) {
             <td>${match.score}</td>
         `;
     });
+}
+
+// ===========================
+// NEW CHART FUNCTIONS
+// ===========================
+
+/**
+ * Create Pie Chart for Win/Loss/Draw Distribution
+ */
+function createResultsChart(stats) {
+    const ctx = document.getElementById('resultsChart');
+    if (!ctx) return;
+    
+    if (resultsChart) {
+        resultsChart.destroy();
+    }
+    
+    const losses = stats.matches_lost || 0;
+    const draws = stats.total_matches - stats.matches_won - losses;
+    
+    resultsChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Wins', 'Losses', 'Draws'],
+            datasets: [{
+                data: [
+                    stats.matches_won || 0,
+                    losses,
+                    draws >= 0 ? draws : 0
+                ],
+                backgroundColor: ['#28a745', '#dc3545', '#ffc107'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { padding: 15, font: { size: 13 } }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+/**
+ * Create Bar Chart for Performance by Difficulty
+ */
+function createDifficultyChart(stats) {
+    const ctx = document.getElementById('difficultyChart');
+    if (!ctx) return;
+    
+    if (difficultyChart) {
+        difficultyChart.destroy();
+    }
+    
+    const performance = calculatePerformanceByDifficulty(stats.match_history || []);
+    
+    difficultyChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Easy', 'Medium', 'Hard'],
+            datasets: [
+                {
+                    label: 'Wins',
+                    data: [performance.easy.wins, performance.medium.wins, performance.hard.wins],
+                    backgroundColor: '#28a745',
+                    borderRadius: 5
+                },
+                {
+                    label: 'Losses',
+                    data: [performance.easy.losses, performance.medium.losses, performance.hard.losses],
+                    backgroundColor: '#dc3545',
+                    borderRadius: 5
+                },
+                {
+                    label: 'Draws',
+                    data: [performance.easy.draws, performance.medium.draws, performance.hard.draws],
+                    backgroundColor: '#ffc107',
+                    borderRadius: 5
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            },
+            plugins: {
+                legend: { position: 'bottom', labels: { padding: 15, font: { size: 13 } } }
+            }
+        }
+    });
+}
+
+/**
+ * Create Line Chart for Win Rate Trend
+ */
+function createTrendChart(stats) {
+    const ctx = document.getElementById('trendChart');
+    if (!ctx) return;
+    
+    if (trendChart) {
+        trendChart.destroy();
+    }
+    
+    const trendData = calculateWinRateTrend(stats.match_history || []);
+    
+    trendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: trendData.labels,
+            datasets: [{
+                label: 'Win Rate %',
+                data: trendData.values,
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                pointBackgroundColor: '#667eea',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: { callback: function(value) { return value + '%'; } }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Win Rate: ${context.parsed.y.toFixed(1)}%`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ===========================
+// HELPER FUNCTIONS FOR CHARTS
+// ===========================
+
+function calculatePerformanceByDifficulty(history) {
+    const performance = {
+        easy: { wins: 0, losses: 0, draws: 0 },
+        medium: { wins: 0, losses: 0, draws: 0 },
+        hard: { wins: 0, losses: 0, draws: 0 }
+    };
+    
+    history.forEach(match => {
+        const difficulty = (match.difficulty || 'easy').toLowerCase();
+        const result = (match.result || '').toLowerCase();
+        
+        if (performance[difficulty]) {
+            if (result.includes('win') || result.includes('won')) {
+                performance[difficulty].wins++;
+            } else if (result.includes('loss') || result.includes('lost')) {
+                performance[difficulty].losses++;
+            } else {
+                performance[difficulty].draws++;
+            }
+        }
+    });
+    
+    return performance;
+}
+
+function calculateWinRateTrend(history) {
+    if (!history || history.length === 0) {
+        return { labels: ['No matches yet'], values: [0] };
+    }
+    
+    const sorted = [...history].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const labels = [];
+    const values = [];
+    let wins = 0;
+    let total = 0;
+    
+    sorted.forEach((match, index) => {
+        total++;
+        const result = (match.result || '').toLowerCase();
+        
+        if (result.includes('win') || result.includes('won')) {
+            wins++;
+        }
+        
+        if ((index + 1) % 5 === 0 || index === sorted.length - 1) {
+            const winRate = total > 0 ? (wins / total) * 100 : 0;
+            labels.push(`Match ${index + 1}`);
+            values.push(winRate);
+        }
+    });
+    
+    return { labels, values };
 }
