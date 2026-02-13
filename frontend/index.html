@@ -419,52 +419,78 @@
             </div>
         </div>
 
-        <!-- Statistics Screen -->
-        <div id="screen-stats" class="screen">
-            <div class="screen-header">
-                <h2>Your Statistics</h2>
-                <button id="btn-back-to-menu" class="btn btn-secondary">Back to Menu</button>
+        <!-- Statistics Screen - Now WITH CHARTS included -->
+<div id="screen-stats" class="screen">
+    <div class="screen-header">
+        <h2>Your Statistics</h2>
+        <button id="btn-back-to-menu" class="btn btn-secondary">Back to Menu</button>
+    </div>
+    
+    <div class="stats-container">
+        <!-- Original Stats Overview -->
+        <div class="stats-overview">
+            <div class="stat-card">
+                <div class="stat-value" id="stat-total-matches">0</div>
+                <div class="stat-label">Total Matches</div>
             </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-matches-won">0</div>
+                <div class="stat-label">Matches Won</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-win-rate">0%</div>
+                <div class="stat-label">Win Rate</div>
+            </div>
+        </div>
+        
+        <!-- NEW: Charts Section -->
+        <div class="charts-section-addon">
+            <h3 style="text-align: center; margin: 30px 0 20px 0; color: #2c3e50;">📊 Visual Analytics</h3>
             
-            <div class="stats-container">
-                <div class="stats-overview">
-                    <div class="stat-card">
-                        <div class="stat-value" id="stat-total-matches">0</div>
-                        <div class="stat-label">Total Matches</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="stat-matches-won">0</div>
-                        <div class="stat-label">Matches Won</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="stat-win-rate">0%</div>
-                        <div class="stat-label">Win Rate</div>
-                    </div>
+            <div class="charts-grid">
+                <!-- Pie Chart -->
+                <div class="chart-box">
+                    <h4>Match Results Distribution</h4>
+                    <canvas id="resultsChart"></canvas>
                 </div>
-                
-                <div class="match-history">
-                    <h3>Match History</h3>
-                    <div class="history-table">
-                        <table id="history-table">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Opponent</th>
-                                    <th>Mode</th>
-                                    <th>Difficulty</th>
-                                    <th>Result</th>
-                                    <th>Score</th>
-                                </tr>
-                            </thead>
-                            <tbody id="history-tbody">
-                                <!-- Populated by JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
+
+                <!-- Bar Chart -->
+                <div class="chart-box">
+                    <h4>Performance by Difficulty</h4>
+                    <canvas id="difficultyChart"></canvas>
+                </div>
+
+                <!-- Line Chart -->
+                <div class="chart-box chart-full-width">
+                    <h4>Win Rate Over Time</h4>
+                    <canvas id="trendChart"></canvas>
                 </div>
             </div>
         </div>
-
+        
+        <!-- Original Match History -->
+        <div class="match-history">
+            <h3>Match History</h3>
+            <div class="history-table">
+                <table id="history-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Opponent</th>
+                            <th>Mode</th>
+                            <th>Difficulty</th>
+                            <th>Result</th>
+                            <th>Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-tbody">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
         <!-- Audio Controls -->
         <div class="audio-controls">
             <button id="btn-mute" class="audio-btn" title="Mute/Unmute">
